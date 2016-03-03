@@ -7,17 +7,26 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		5305E47B1C8787D10084BACC /* MMaze.mm in Sources */ = {isa = PBXBuildFile; fileRef = 5305E47A1C8787D10084BACC /* MMaze.mm */; };
+		5305E4811C87E6260084BACC /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 53957F9C1C7E4510005F0E73 /* Assets.xcassets */; };
+		5305E4831C87E7A90084BACC /* GameViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 5305E4821C87E7A90084BACC /* GameViewController.mm */; };
 		53957F8E1C7E4510005F0E73 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 53957F8D1C7E4510005F0E73 /* main.m */; };
 		53957F911C7E4510005F0E73 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 53957F901C7E4510005F0E73 /* AppDelegate.m */; };
 		53957F931C7E4510005F0E73 /* Shader.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 53957F921C7E4510005F0E73 /* Shader.fsh */; };
 		53957F951C7E4510005F0E73 /* Shader.vsh in Resources */ = {isa = PBXBuildFile; fileRef = 53957F941C7E4510005F0E73 /* Shader.vsh */; };
-		53957F981C7E4510005F0E73 /* GameViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 53957F971C7E4510005F0E73 /* GameViewController.m */; };
 		53957F9B1C7E4510005F0E73 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 53957F991C7E4510005F0E73 /* Main.storyboard */; };
-		53957F9D1C7E4510005F0E73 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 53957F9C1C7E4510005F0E73 /* Assets.xcassets */; };
 		53957FA01C7E4510005F0E73 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 53957F9E1C7E4510005F0E73 /* LaunchScreen.storyboard */; };
+		53957FAB1C7E48C8005F0E73 /* DisjointSet.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53957FA71C7E48C8005F0E73 /* DisjointSet.cpp */; };
+		53957FAC1C7E48C8005F0E73 /* maze.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53957FA91C7E48C8005F0E73 /* maze.cpp */; };
+		53957FAF1C7E62D1005F0E73 /* OpenGLView.m in Sources */ = {isa = PBXBuildFile; fileRef = 53957FAE1C7E62D1005F0E73 /* OpenGLView.m */; };
+		53957FB11C7E69F4005F0E73 /* SimpleVertex.glsl in Resources */ = {isa = PBXBuildFile; fileRef = 53957FB01C7E69F4005F0E73 /* SimpleVertex.glsl */; };
+		53957FB31C7E6A71005F0E73 /* SimpleFragment.glsl in Resources */ = {isa = PBXBuildFile; fileRef = 53957FB21C7E6A71005F0E73 /* SimpleFragment.glsl */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		5305E4791C8787D10084BACC /* MMaze.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MMaze.h; sourceTree = "<group>"; };
+		5305E47A1C8787D10084BACC /* MMaze.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = MMaze.mm; sourceTree = "<group>"; };
+		5305E4821C87E7A90084BACC /* GameViewController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = GameViewController.mm; sourceTree = "<group>"; };
 		53957F891C7E4510005F0E73 /* Assignment 2.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Assignment 2.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		53957F8D1C7E4510005F0E73 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		53957F8F1C7E4510005F0E73 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
@@ -25,11 +34,19 @@
 		53957F921C7E4510005F0E73 /* Shader.fsh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; name = Shader.fsh; path = Shaders/Shader.fsh; sourceTree = "<group>"; };
 		53957F941C7E4510005F0E73 /* Shader.vsh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; name = Shader.vsh; path = Shaders/Shader.vsh; sourceTree = "<group>"; };
 		53957F961C7E4510005F0E73 /* GameViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GameViewController.h; sourceTree = "<group>"; };
-		53957F971C7E4510005F0E73 /* GameViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GameViewController.m; sourceTree = "<group>"; };
+		53957F971C7E4510005F0E73 /* GameViewController2.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = GameViewController2.mm; sourceTree = "<group>"; };
 		53957F9A1C7E4510005F0E73 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		53957F9C1C7E4510005F0E73 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		53957F9F1C7E4510005F0E73 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		53957FA11C7E4510005F0E73 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		53957FA71C7E48C8005F0E73 /* DisjointSet.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DisjointSet.cpp; sourceTree = "<group>"; };
+		53957FA81C7E48C8005F0E73 /* DisjointSet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DisjointSet.h; sourceTree = "<group>"; };
+		53957FA91C7E48C8005F0E73 /* maze.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = maze.cpp; sourceTree = "<group>"; };
+		53957FAA1C7E48C8005F0E73 /* maze.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = maze.h; sourceTree = "<group>"; };
+		53957FAD1C7E507A005F0E73 /* OpenGLView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OpenGLView.h; sourceTree = "<group>"; };
+		53957FAE1C7E62D1005F0E73 /* OpenGLView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OpenGLView.m; sourceTree = "<group>"; };
+		53957FB01C7E69F4005F0E73 /* SimpleVertex.glsl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = SimpleVertex.glsl; sourceTree = "<group>"; };
+		53957FB21C7E6A71005F0E73 /* SimpleFragment.glsl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = SimpleFragment.glsl; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -62,17 +79,28 @@
 		53957F8B1C7E4510005F0E73 /* Assignment 2 */ = {
 			isa = PBXGroup;
 			children = (
+				53957FA71C7E48C8005F0E73 /* DisjointSet.cpp */,
+				53957FA81C7E48C8005F0E73 /* DisjointSet.h */,
+				53957FA91C7E48C8005F0E73 /* maze.cpp */,
+				53957FAA1C7E48C8005F0E73 /* maze.h */,
 				53957F8F1C7E4510005F0E73 /* AppDelegate.h */,
 				53957F901C7E4510005F0E73 /* AppDelegate.m */,
 				53957F921C7E4510005F0E73 /* Shader.fsh */,
 				53957F941C7E4510005F0E73 /* Shader.vsh */,
 				53957F961C7E4510005F0E73 /* GameViewController.h */,
-				53957F971C7E4510005F0E73 /* GameViewController.m */,
+				53957F971C7E4510005F0E73 /* GameViewController2.mm */,
+				5305E4821C87E7A90084BACC /* GameViewController.mm */,
+				5305E4791C8787D10084BACC /* MMaze.h */,
+				5305E47A1C8787D10084BACC /* MMaze.mm */,
 				53957F991C7E4510005F0E73 /* Main.storyboard */,
 				53957F9C1C7E4510005F0E73 /* Assets.xcassets */,
 				53957F9E1C7E4510005F0E73 /* LaunchScreen.storyboard */,
 				53957FA11C7E4510005F0E73 /* Info.plist */,
 				53957F8C1C7E4510005F0E73 /* Supporting Files */,
+				53957FAD1C7E507A005F0E73 /* OpenGLView.h */,
+				53957FAE1C7E62D1005F0E73 /* OpenGLView.m */,
+				53957FB01C7E69F4005F0E73 /* SimpleVertex.glsl */,
+				53957FB21C7E6A71005F0E73 /* SimpleFragment.glsl */,
 			);
 			path = "Assignment 2";
 			sourceTree = "<group>";
@@ -144,9 +172,11 @@
 			files = (
 				53957F9B1C7E4510005F0E73 /* Main.storyboard in Resources */,
 				53957F951C7E4510005F0E73 /* Shader.vsh in Resources */,
-				53957F9D1C7E4510005F0E73 /* Assets.xcassets in Resources */,
+				53957FB31C7E6A71005F0E73 /* SimpleFragment.glsl in Resources */,
 				53957FA01C7E4510005F0E73 /* LaunchScreen.storyboard in Resources */,
+				5305E4811C87E6260084BACC /* Assets.xcassets in Resources */,
 				53957F931C7E4510005F0E73 /* Shader.fsh in Resources */,
+				53957FB11C7E69F4005F0E73 /* SimpleVertex.glsl in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -157,8 +187,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5305E4831C87E7A90084BACC /* GameViewController.mm in Sources */,
+				53957FAB1C7E48C8005F0E73 /* DisjointSet.cpp in Sources */,
+				5305E47B1C8787D10084BACC /* MMaze.mm in Sources */,
+				53957FAF1C7E62D1005F0E73 /* OpenGLView.m in Sources */,
 				53957F911C7E4510005F0E73 /* AppDelegate.m in Sources */,
-				53957F981C7E4510005F0E73 /* GameViewController.m in Sources */,
+				53957FAC1C7E48C8005F0E73 /* maze.cpp in Sources */,
 				53957F8E1C7E4510005F0E73 /* main.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -308,6 +342,7 @@
 				53957FA61C7E4510005F0E73 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
