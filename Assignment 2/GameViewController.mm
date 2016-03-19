@@ -33,9 +33,9 @@ GLint uniforms[NUM_UNIFORMS];
     GLuint _program;
     
     // Shader uniforms
-    GLKMatrix4 _modelViewProjectionMatrix;
-    GLKMatrix4 _modelViewMatrix;
-    GLKMatrix3 _normalMatrix;
+    GLKMatrix4 _cameraMatrix;
+    GLKMatrix4 _mazeMatrix, _crateMatrix;
+    GLKMatrix3 _mazeNormalMatrix, _crateNormalMatrix;
     
     // Lighting parameters
     /* specify lighting parameters here...e.g., GLKVector3 flashlightPosition; */
@@ -52,21 +52,28 @@ GLint uniforms[NUM_UNIFORMS];
     CGPoint dragStart;
     
     // Shape vertices, etc. and textures
-    GLfloat *vertices, *normals, *texCoords;
-    GLuint numIndices, *indices;
+    GLfloat *crateVerts, *crateNorms, *crateTexCoords;
+    GLuint crateNumIndices, *crateIndices;
     /* texture parameters ??? */
     GLuint crateTexture, *_textures;
     
     // GLES buffer IDs
-    GLuint _vertexArray;
-    GLuint _vertexBuffers[3];
-    GLuint _indexBuffer;
+    GLuint _mazeArray, _crateArray;
+    GLuint _mazeBuffers[3], _crateBuffers[3];
+    GLuint _mazeIndexBuffer, _crateIndexBuffer;
     
     MMaze* _maze;
-    int _numWalls;
+    GLfloat *mazeVerts, *mazeNorms, *mazeTexCoords;
+    GLuint _numWalls, mazeNumIndices, *mazeIndices;
     
     GLuint _floorTexture;
     GLuint _wallTextures[ 4 ];
+    
+    GLKVector3 _cameraPosition;
+    CGPoint* _lastTouchPoint;
+    BOOL _daytimeOn;
+    BOOL _flashlightOn;
+    BOOL _fogOn;
 }
 
 @property (strong, nonatomic) EAGLContext *context;
@@ -87,15 +94,17 @@ GLint uniforms[NUM_UNIFORMS];
 {
     [super viewDidLoad];
     
+    _lastTouchPoint = nil;
+    
     // Set up iOS gesture recognizers
-    UITapGestureRecognizer *singleTap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(doSingleTap:)];
+    /*UITapGestureRecognizer *singleTap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(doSingleTap:)];
     singleTap.numberOfTapsRequired = 1;
     [self.view addGestureRecognizer:singleTap];
     
     UIPanGestureRecognizer *rotObj = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(doRotate:)];
     rotObj.minimumNumberOfTouches = 1;
     rotObj.maximumNumberOfTouches = 1;
-    [self.view addGestureRecognizer:rotObj];
+    [self.view addGestureRecognizer:rotObj];*/
     
     self.context = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2];
     
@@ -108,10 +117,14 @@ GLint uniforms[NUM_UNIFORMS];
     view.drawableDepthFormat = GLKViewDrawableDepthFormat24;
     
     // Set up UI parameters
-    xRot = yRot = 30 * M_PI / 180;
+    xRot = yRot = 0;
     
-    _maze = [[MMaze alloc] initRows: 5 initCols: 5];
+    _cameraPosition = { 0, -0.5f, 0 };
+    
+    _maze = [[MMaze alloc] initRows: 10 initCols: 10];
     [_maze create];
+    
+    [_singleTapRecg requireGestureRecognizerToFail: _doubleTapRecg];
     
     // Set up GL
     [self setupGL];
@@ -164,7 +177,7 @@ GLint uniforms[NUM_UNIFORMS];
     
     // Set up lighting parameters
     /* set values, e.g., flashlightPosition = GLKVector3Make(0.0, 0.0, 1.0); */
-    flashlightPosition = GLKVector3Make(0.0, 0.0, 1.0);
+    flashlightPosition = GLKVector3Make(0.0, 0.0, 0.0);
     diffuseLightPosition = GLKVector3Make(0.0, 1.0, 0.0);
     diffuseComponent = GLKVector4Make(1, 1, 1, 1.0);
     shininess = 200.0;
@@ -174,11 +187,11 @@ GLint uniforms[NUM_UNIFORMS];
     // Initialize GL and get buffers
     glEnable(GL_DEPTH_TEST);
     
-    glGenVertexArraysOES(1, &_vertexArray);
-    glBindVertexArrayOES(_vertexArray);
+    glGenVertexArraysOES(1, &_mazeArray);
+    glBindVertexArrayOES(_mazeArray);
     
-    glGenBuffers(3, _vertexBuffers);
-    glGenBuffers(1, &_indexBuffer);
+    glGenBuffers(3, _mazeBuffers);
+    glGenBuffers(1, &_mazeIndexBuffer);
     
     // Generate vertices
     // Initialize GL and get buffers
@@ -188,8 +201,8 @@ GLint uniforms[NUM_UNIFORMS];
     _wallTextures[ 1 ] = [self setupTexture: @"wall1.jpg"];
     _wallTextures[ 2 ] = [self setupTexture: @"wall2.jpg"];
     _wallTextures[ 3 ] = [self setupTexture: @"wall3.jpg"];
+    crateTexture = [self setupTexture: @"crate.jpg"];
     
-    glFrontFace( GL_CW );
     glCullFace( GL_BACK );
     glEnable( GL_CULL_FACE );
     glEnable( GL_DEPTH_TEST );
@@ -198,9 +211,9 @@ GLint uniforms[NUM_UNIFORMS];
     {
         const int numCells = _maze.rows * _maze.cols;
         
-        GLfloat* pos = vertices = new GLfloat[ 3 * 3 * 2 * 5 * numCells ];
-        GLfloat* norm = normals = new GLfloat[ 3 * 3 * 2 * 5 * numCells ];
-        GLfloat* tex = texCoords = new GLfloat[ 2 * 3 * 2 * 5 * numCells ];
+        GLfloat* pos = mazeVerts = new GLfloat[ 3 * 3 * 2 * 5 * numCells ];
+        GLfloat* norm = mazeNorms = new GLfloat[ 3 * 3 * 2 * 5 * numCells ];
+        GLfloat* tex = mazeTexCoords = new GLfloat[ 2 * 3 * 2 * 5 * numCells ];
         GLuint* ttx = _textures = new GLuint[ numCells * 5 * 2 ];
         //GLfloat vertPos[ 6 * 3 * 2 * 4 * 4 * 4 ];
         
@@ -289,15 +302,19 @@ GLint uniforms[NUM_UNIFORMS];
                 
                 MazeCell cell = [_maze cellX: x cellY: z];
                 
-                if ( cell.northWallPresent )
+                if ( cell.northWallPresent && (z == 0 || [_maze cellX: x cellY: z - 1].southWallPresent) )
                 {
-                    GLuint texture = _wallTextures[ 0 ];
-                    if ( cell.westWallPresent == cell.eastWallPresent )
-                        texture = _wallTextures[ 1 ];
-                    else if ( cell.westWallPresent )
-                        texture = _wallTextures[ 2 ];
-                    else if ( cell.eastWallPresent )
-                        texture = _wallTextures[ 3 ];
+                    int texI = 0;
+                    if ( x > 0
+                        && [_maze cellX: x - 1 cellY: z].northWallPresent
+                        && (z == 0 || [_maze cellX: x - 1 cellY: z - 1].southWallPresent) )
+                        texI += 1;
+                    if ( x < _maze.cols - 1
+                        && [_maze cellX: x + 1 cellY: z].northWallPresent
+                        && (z == 0 || [_maze cellX: x + 1 cellY: z - 1].southWallPresent) )
+                        texI += 2;
+                    
+                    GLuint texture = _wallTextures[ texI ];
                     
                     pos[ p++ ] = x0;
                     pos[ p++ ] = y0;
@@ -359,15 +376,20 @@ GLint uniforms[NUM_UNIFORMS];
                     ttx[ v++ ] = texture;
                 }
                 
-                if ( cell.southWallPresent )
+                if ( cell.southWallPresent && (z == _maze.rows - 1 || [_maze cellX: x cellY: z + 1].northWallPresent))
                 {
-                    GLuint texture = _wallTextures[ 0 ];
-                    if ( cell.westWallPresent == cell.eastWallPresent )
-                        texture = _wallTextures[ 1 ];
-                    else if ( cell.westWallPresent )
-                        texture = _wallTextures[ 3 ];
-                    else if ( cell.eastWallPresent )
-                        texture = _wallTextures[ 2 ];
+                    int texI = 0;
+                    if ( x > 0
+                        && [_maze cellX: x - 1 cellY: z].southWallPresent
+                        && (z == _maze.rows - 1 || [_maze cellX: x - 1 cellY: z + 1].northWallPresent) )
+                        texI += 2;
+                    if ( x < _maze.cols - 1
+                        && [_maze cellX: x + 1 cellY: z].southWallPresent
+                        && (z == _maze.rows - 1 || [_maze cellX: x + 1 cellY: z + 1].northWallPresent) )
+                        texI += 1;
+                    
+                    GLuint texture = _wallTextures[ texI ];
+                    
                     
                     pos[ p++ ] = x1;
                     pos[ p++ ] = y0;
@@ -429,15 +451,19 @@ GLint uniforms[NUM_UNIFORMS];
                     ttx[ v++ ] = texture;
                 }
                 
-                if ( cell.eastWallPresent )
+                if ( cell.eastWallPresent && (x == _maze.cols - 1 || [_maze cellX: x + 1 cellY: z].westWallPresent) )
                 {
-                    GLuint texture = _wallTextures[ 0 ];
-                    if ( cell.northWallPresent == cell.southWallPresent )
-                        texture = _wallTextures[ 1 ];
-                    else if ( cell.northWallPresent )
-                        texture = _wallTextures[ 2 ];
-                    else if ( cell.southWallPresent )
-                        texture = _wallTextures[ 3 ];
+                    int texI = 0;
+                    if ( z > 0
+                        && [_maze cellX: x cellY: z - 1].eastWallPresent
+                        && (x == _maze.cols - 1 || [_maze cellX: x + 1 cellY: z - 1].westWallPresent) )
+                        texI += 1;
+                    if ( z < _maze.rows - 1
+                        && [_maze cellX: x cellY: z + 1].eastWallPresent
+                        && (x == _maze.cols - 1 || [_maze cellX: x + 1 cellY: z + 1].westWallPresent) )
+                        texI += 2;
+                    
+                    GLuint texture = _wallTextures[ texI ];
                     
                     pos[ p++ ] = x1;
                     pos[ p++ ] = y0;
@@ -499,15 +525,19 @@ GLint uniforms[NUM_UNIFORMS];
                     ttx[ v++ ] = texture;
                 }
                 
-                if ( cell.westWallPresent )
+                if ( cell.westWallPresent && (x == 0 || [_maze cellX: x - 1 cellY: z].eastWallPresent) )
                 {
-                    GLuint texture = _wallTextures[ 0 ];
-                    if ( cell.northWallPresent == cell.southWallPresent )
-                        texture = _wallTextures[ 1 ];
-                    else if ( cell.northWallPresent )
-                        texture = _wallTextures[ 3 ];
-                    else if ( cell.southWallPresent )
-                        texture = _wallTextures[ 2 ];
+                    int texI = 0;
+                    if ( z > 0
+                        && [_maze cellX: x cellY: z - 1].westWallPresent
+                        && (x == 0 || [_maze cellX: x - 1 cellY: z - 1].eastWallPresent) )
+                        texI += 2;
+                    if ( z < _maze.rows - 1
+                        && [_maze cellX: x cellY: z + 1].westWallPresent
+                        && (x == 0 || [_maze cellX: x - 1 cellY: z + 1].eastWallPresent) )
+                        texI += 1;
+                    
+                    GLuint texture = _wallTextures[ texI ];
                     
                     pos[ p++ ] = x0;
                     pos[ p++ ] = y0;
@@ -571,30 +601,30 @@ GLint uniforms[NUM_UNIFORMS];
             }
         }
         _numWalls = v / 2;
-        numIndices = p / 3;
-        indices = new GLuint[ numIndices ];
+        mazeNumIndices = p / 3;
+        mazeIndices = new GLuint[ mazeNumIndices ];
         
-        for ( int i = 0; i < numIndices; i++ )
-            indices[ i ] = i;
+        for ( int i = 0; i < mazeNumIndices; i++ )
+            mazeIndices[ i ] = i;
         
         
-        glBindBuffer( GL_ARRAY_BUFFER, _vertexBuffers[ 0 ] );
-        glBufferData( GL_ARRAY_BUFFER, p * sizeof( GLfloat ), vertices, GL_STATIC_DRAW );
+        glBindBuffer( GL_ARRAY_BUFFER, _mazeBuffers[ 0 ] );
+        glBufferData( GL_ARRAY_BUFFER, p * sizeof( GLfloat ), mazeVerts, GL_STATIC_DRAW );
         glEnableVertexAttribArray( GLKVertexAttribPosition );
         glVertexAttribPointer( GLKVertexAttribPosition, 3, GL_FLOAT, GL_FALSE, 3 * sizeof( float ), 0 );
         
-        glBindBuffer( GL_ARRAY_BUFFER, _vertexBuffers[ 1 ] );
-        glBufferData( GL_ARRAY_BUFFER, n * sizeof( GLfloat ), normals, GL_STATIC_DRAW );
+        glBindBuffer( GL_ARRAY_BUFFER, _mazeBuffers[ 1 ] );
+        glBufferData( GL_ARRAY_BUFFER, n * sizeof( GLfloat ), mazeNorms, GL_STATIC_DRAW );
         glEnableVertexAttribArray( GLKVertexAttribNormal );
         glVertexAttribPointer( GLKVertexAttribNormal, 3, GL_FLOAT, GL_FALSE, 3 * sizeof( float ), 0 );
         
-        glBindBuffer( GL_ARRAY_BUFFER, _vertexBuffers[ 2 ] );
-        glBufferData( GL_ARRAY_BUFFER, t * sizeof( GLfloat ), texCoords, GL_STATIC_DRAW );
+        glBindBuffer( GL_ARRAY_BUFFER, _mazeBuffers[ 2 ] );
+        glBufferData( GL_ARRAY_BUFFER, t * sizeof( GLfloat ), mazeTexCoords, GL_STATIC_DRAW );
         glEnableVertexAttribArray( GLKVertexAttribTexCoord0 );
         glVertexAttribPointer( GLKVertexAttribTexCoord0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof( float ), 0 );
         
-        glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, _indexBuffer );
-        glBufferData( GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * numIndices, indices, GL_STATIC_DRAW );
+        glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, _mazeIndexBuffer );
+        glBufferData( GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * mazeNumIndices, mazeIndices, GL_STATIC_DRAW );
         
         glBindVertexArrayOES( 0 );
     }
@@ -603,37 +633,43 @@ GLint uniforms[NUM_UNIFORMS];
     glBindTexture( GL_TEXTURE_2D, _floorTexture );
     glUniform1i( uniforms[ UNIFORM_TEXTURE ], 0 );
     
-    /*int numVerts;
-    numIndices = generateSphere(50, 1, &vertices, &normals, &texCoords, &indices, &numVerts);
-    //    numIndices = generateCube(1.5, &vertices, &normals, &texCoords, &indices, &numVerts);
+    glGenVertexArraysOES(1, &_crateArray);
+    glBindVertexArrayOES(_crateArray);
+    
+    glGenBuffers(3, _crateBuffers);
+    glGenBuffers(1, &_crateIndexBuffer);
+    
+    int numVerts;
+    //numIndices = generateSphere(50, 1, &vertices, &normals, &texCoords, &indices, &numVerts);
+    crateNumIndices = generateCube(1.5, &crateVerts, &crateNorms, &crateTexCoords, &crateIndices, &numVerts);
     
     // Set up GL buffers
-    glBindBuffer(GL_ARRAY_BUFFER, _vertexBuffers[0]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat)*3*numVerts, vertices, GL_STATIC_DRAW);
+    glBindBuffer( GL_ARRAY_BUFFER, _crateBuffers[ 0 ] );
+    glBufferData( GL_ARRAY_BUFFER, sizeof(GLfloat)*3*numVerts, crateVerts, GL_STATIC_DRAW );
     glEnableVertexAttribArray(GLKVertexAttribPosition);
     glVertexAttribPointer(GLKVertexAttribPosition, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), BUFFER_OFFSET(0));
     
-    glBindBuffer(GL_ARRAY_BUFFER, _vertexBuffers[1]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat)*3*numVerts, normals, GL_STATIC_DRAW);
+    glBindBuffer( GL_ARRAY_BUFFER, _crateBuffers[ 1 ] );
+    glBufferData( GL_ARRAY_BUFFER, sizeof(GLfloat)*3*numVerts, crateNorms, GL_STATIC_DRAW );
     glEnableVertexAttribArray(GLKVertexAttribNormal);
     glVertexAttribPointer(GLKVertexAttribNormal, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), BUFFER_OFFSET(0));
     
-    glBindBuffer(GL_ARRAY_BUFFER, _vertexBuffers[2]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat)*3*numVerts, texCoords, GL_STATIC_DRAW);
+    glBindBuffer( GL_ARRAY_BUFFER, _crateBuffers[ 2 ] );
+    glBufferData( GL_ARRAY_BUFFER, sizeof(GLfloat)*3*numVerts, crateTexCoords, GL_STATIC_DRAW );
     glEnableVertexAttribArray(GLKVertexAttribTexCoord0);
     glVertexAttribPointer(GLKVertexAttribTexCoord0, 2, GL_FLOAT, GL_FALSE, 2*sizeof(float), BUFFER_OFFSET(0));
     
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _indexBuffer);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int)*numIndices, indices, GL_STATIC_DRAW);
+    glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, _crateIndexBuffer );
+    glBufferData( GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * crateNumIndices, crateIndices, GL_STATIC_DRAW );
     
     glBindVertexArrayOES(0);
     
     // Load in and set texture
     // use setupTexture to create crate texture
-    crateTexture = [self setupTexture:@"crate.jpg"];
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, crateTexture);
-    glUniform1i(uniforms[UNIFORM_TEXTURE], 0);*/
+    //crateTexture = [self setupTexture:@"crate.jpg"];
+    glActiveTexture( GL_TEXTURE0 );
+    glBindTexture( GL_TEXTURE_2D, crateTexture );
+    glUniform1i(uniforms[UNIFORM_TEXTURE], 0);
 }
 
 - (void)tearDownGL
@@ -641,19 +677,24 @@ GLint uniforms[NUM_UNIFORMS];
     [EAGLContext setCurrentContext:self.context];
     
     // Delete GL buffers
-    glDeleteBuffers(3, _vertexBuffers);
-    glDeleteBuffers(1, &_indexBuffer);
-    glDeleteVertexArraysOES(1, &_vertexArray);
+    glDeleteBuffers(3, _mazeBuffers);
+    glDeleteBuffers(1, &_mazeIndexBuffer);
+    glDeleteVertexArraysOES(1, &_mazeArray);
+    
+    glDeleteBuffers(3, _crateBuffers);
+    glDeleteBuffers(1, &_crateIndexBuffer);
+    glDeleteVertexArraysOES(1, &_crateArray);
     
     // Delete vertices buffers
-    if (vertices)
-        free(vertices);
-    if (indices)
-        free(indices);
-    if (normals)
-        free(normals);
-    if (texCoords)
-        free(texCoords);
+    delete crateVerts;
+    delete crateNorms;
+    delete crateTexCoords;
+    delete crateIndices;
+    
+    delete mazeVerts;
+    delete mazeNorms;
+    delete mazeTexCoords;
+    delete mazeIndices;
     
     // Delete shader program
     if (_program) {
@@ -665,18 +706,79 @@ GLint uniforms[NUM_UNIFORMS];
 
 #pragma mark - iOS gesture events
 
-- (IBAction)doSingleTap:(UITapGestureRecognizer *)recognizer
+
+- (IBAction) handlePan:( UIPanGestureRecognizer* ) recognizer
 {
-    dragStart = [recognizer locationInView:self.view];
+    CGPoint translation = [recognizer translationInView: self.view];
+    
+    if ( _lastTouchPoint == nil )
+        return;
+
+    if ( recognizer.numberOfTouches == 1 )
+    {
+        xRot += (translation.y - _lastTouchPoint->y) * 0.01f;
+        yRot += (translation.x - _lastTouchPoint->x) * 0.01f;
+    }
+    /*else if ( recognizer.numberOfTouches >= 2 )
+    {
+        _positionX += (translation.x - _lastTouchPoint->x) * 0.01f;
+        _positionY -= (translation.y - _lastTouchPoint->y) * 0.01f;
+    }*/
+    
+    *_lastTouchPoint = translation;
 }
 
-- (IBAction)doRotate:(UIPanGestureRecognizer *)recognizer
+- (IBAction) doSingleTap:( UITapGestureRecognizer* ) sender
 {
-    if (recognizer.state != UIGestureRecognizerStateEnded) {
-        CGPoint newPt = [recognizer locationInView:self.view];
-        yRot = (newPt.x - dragStart.x) * M_PI / 180;
-        xRot = (newPt.y - dragStart.y) * M_PI / 180;
+    _cameraPosition.x -= sinf( yRot );
+    _cameraPosition.z += cosf( yRot );
+    
+    delete _lastTouchPoint;
+    _lastTouchPoint = nil;
+}
+
+- (IBAction) doDoubleTap:( UITapGestureRecognizer* ) recognizer
+{
+    _cameraPosition = { 0, -0.5f, 0 };
+    xRot = yRot = 0;
+    
+    delete _lastTouchPoint;
+    _lastTouchPoint = nil;
+}
+
+-(void) touchesBegan:( NSSet* ) touches
+           withEvent:( UIEvent* ) event
+{
+    UITouch* touch = (UITouch*) [touches anyObject];
+    
+    if ( touch != nil )
+    {
+        _lastTouchPoint = new CGPoint;
+        *_lastTouchPoint = touch.accessibilityActivationPoint;
     }
+}
+
+-(void) touchesEnded:( NSSet* ) touches
+           withEvent:( UIEvent* ) event
+{
+    delete _lastTouchPoint;
+    _lastTouchPoint = nil;
+}
+
+
+- (IBAction) daytimeSwitch:(UISwitch*) sender
+{
+    _daytimeOn = [sender isOn];
+}
+
+- (IBAction) flashlightSwitch:(UISwitch*) sender
+{
+    _flashlightOn = [sender isOn];
+}
+
+- (IBAction) fogSwitch:(UISwitch*) sender
+{
+    _fogOn = [sender isOn];
 }
 
 
@@ -685,24 +787,51 @@ GLint uniforms[NUM_UNIFORMS];
 - (void)update
 {
     // Set up base model view matrix (place camera)
-    GLKMatrix4 baseModelViewMatrix = GLKMatrix4MakeTranslation(0.0f, 0.0f, -4.0f);
-    baseModelViewMatrix = GLKMatrix4Rotate(baseModelViewMatrix, _rotation, 0.0f, 1.0f, 0.0f);
+    GLKMatrix4 baseCameraMatrix = GLKMatrix4MakeRotation( xRot, 1.0f, 0.0f, 0.0f );
+    baseCameraMatrix = GLKMatrix4Rotate( baseCameraMatrix, yRot, 0.0f, 1.0f, 0.0f );
+    baseCameraMatrix = GLKMatrix4Translate( baseCameraMatrix, _cameraPosition.x, _cameraPosition.y, _cameraPosition.z );
+    
+    //GLKMatrix4 baseModelViewMatrix = GLKMatrix4MakeTranslation( _cameraPosition.x, _cameraPosition.y, _cameraPosition.z );
+    //baseModelViewMatrix = GLKMatrix4Rotate(baseModelViewMatrix, yRot, 0.0f, 1.0f, 0.0f);
     
     // Set up model view matrix (place model in world)
-    _modelViewMatrix = GLKMatrix4Identity;
-    _modelViewMatrix = GLKMatrix4Rotate(_modelViewMatrix, xRot, 1.0f, 0.0f, 0.0f);
-    _modelViewMatrix = GLKMatrix4Rotate(_modelViewMatrix, yRot, 0.0f, 1.0f, 0.0f);
-    _modelViewMatrix = GLKMatrix4Rotate(_modelViewMatrix, _rotation, 0.0f, 1.0f, 0.0f);
-    _modelViewMatrix = GLKMatrix4Multiply(baseModelViewMatrix, _modelViewMatrix);
+    _mazeMatrix = GLKMatrix4Identity;
+    //_mazeMatrix = GLKMatrix4Rotate( _mazeMatrix, -xRot, 1.0f, 0.0f, 0.0f );
+    //_mazeMatrix = GLKMatrix4Rotate( _mazeMatrix, -yRot, 0.0f, 1.0f, 0.0f );
+    //_modelViewMatrix = GLKMatrix4Rotate(_modelViewMatrix, _rotation, 0.0f, 1.0f, 0.0f);
+    _mazeMatrix = GLKMatrix4Multiply( baseCameraMatrix, _mazeMatrix );
     
     // Calculate normal matrix
-    _normalMatrix = GLKMatrix3InvertAndTranspose(GLKMatrix4GetMatrix3(_modelViewMatrix), NULL);
+    _mazeNormalMatrix = GLKMatrix3InvertAndTranspose( GLKMatrix4GetMatrix3( _mazeMatrix ), NULL );
+    
+    _crateMatrix = GLKMatrix4MakeScale( 0.5f, 0.5f, 0.5f );
+    _crateMatrix = GLKMatrix4Rotate( _crateMatrix, _rotation, 0, 1, 0 );
+    _crateMatrix = GLKMatrix4Translate( _crateMatrix, 0, -0.5f, 0 );
+    _crateMatrix = GLKMatrix4Multiply( baseCameraMatrix, _crateMatrix );
+    
+    // Calculate normal matrix
+    _crateNormalMatrix = GLKMatrix3InvertAndTranspose( GLKMatrix4GetMatrix3( _crateMatrix ), NULL );
     
     // Calculate projection matrix
-    float aspect = fabsf(self.view.bounds.size.width / self.view.bounds.size.height);
-    GLKMatrix4 projectionMatrix = GLKMatrix4MakePerspective(GLKMathDegreesToRadians(65.0f), aspect, 0.1f, 100.0f);
+    float aspect = fabsf( self.view.bounds.size.width / self.view.bounds.size.height );
+    GLKMatrix4 projectionMatrix = GLKMatrix4MakePerspective( GLKMathDegreesToRadians( 90.0f ), aspect, 0.1f, 10.0f );
     
-    _modelViewProjectionMatrix = GLKMatrix4Multiply(projectionMatrix, _modelViewMatrix);
+    _cameraMatrix = GLKMatrix4Multiply( projectionMatrix, baseCameraMatrix );
+    
+    flashlightPosition = _cameraPosition;
+    flashlightPosition.x -= cosf( yRot );
+    flashlightPosition.y -= sinf( xRot );
+    flashlightPosition.z += sinf( yRot );
+    
+    ambientComponent.r = _daytimeOn ? 0.8f : 0.3f;
+    ambientComponent.g = _daytimeOn ? 0.8f : 0.3f;
+    ambientComponent.b = _daytimeOn ? 0.75f : 0.4f;
+    
+    diffuseComponent.r = _daytimeOn ? 0.8f : 0.3f;
+    diffuseComponent.g = _daytimeOn ? 0.8f : 0.3f;
+    diffuseComponent.b = _daytimeOn ? 0.75f : 0.4f;
+    
+    _rotation += self.timeSinceLastUpdate * 0.5f;
 }
 
 - (void)glkView:(GLKView *)view drawInRect:(CGRect)rect
@@ -712,13 +841,13 @@ GLint uniforms[NUM_UNIFORMS];
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
     // Select VAO and shaders
-    glBindVertexArrayOES(_vertexArray);
+    glBindVertexArrayOES(_mazeArray);
     glUseProgram(_program);
     
     // Set up uniforms
-    glUniformMatrix4fv(uniforms[UNIFORM_MODELVIEWPROJECTION_MATRIX], 1, 0, _modelViewProjectionMatrix.m);
-    glUniformMatrix3fv(uniforms[UNIFORM_NORMAL_MATRIX], 1, 0, _normalMatrix.m);
-    glUniformMatrix4fv(uniforms[UNIFORM_MODELVIEW_MATRIX], 1, 0, _modelViewMatrix.m);
+    glUniformMatrix4fv(uniforms[UNIFORM_MODELVIEWPROJECTION_MATRIX], 1, 0, _cameraMatrix.m);
+    glUniformMatrix3fv(uniforms[UNIFORM_NORMAL_MATRIX], 1, 0, _mazeNormalMatrix.m);
+    glUniformMatrix4fv(uniforms[UNIFORM_MODELVIEW_MATRIX], 1, 0, _mazeMatrix.m);
     /* set lighting parameters... */
     glUniform3fv(uniforms[UNIFORM_FLASHLIGHT_POSITION], 1, flashlightPosition.v);
     glUniform3fv(uniforms[UNIFORM_DIFFUSE_LIGHT_POSITION], 1, diffuseLightPosition.v);
@@ -727,18 +856,24 @@ GLint uniforms[NUM_UNIFORMS];
     glUniform4fv(uniforms[UNIFORM_SPECULAR_COMPONENT], 1, specularComponent.v);
     glUniform4fv(uniforms[UNIFORM_AMBIENT_COMPONENT], 1, ambientComponent.v);
     
+    glFrontFace( GL_CW );
     // Select VBO and draw
     
-    glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, _indexBuffer );
+    glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, _mazeIndexBuffer );
     for ( int i = 0; i < _numWalls * 2; i++ )
     {
         glBindTexture( GL_TEXTURE_2D, _textures[ i ] );
         glDrawElements( GL_TRIANGLES, 3, GL_UNSIGNED_INT, (GLuint*)(i * 3 * sizeof( GLuint )) );
     }
     
-    //glBindTexture( GL_TEXTURE_2D, _textures[ i ] );
-    //glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, _indexBuffer );
-    //glDrawElements( GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, 0 );
+    glFrontFace( GL_CCW );
+    glBindVertexArrayOES( _crateArray );
+    glUniformMatrix3fv(uniforms[UNIFORM_NORMAL_MATRIX], 1, 0, _crateNormalMatrix.m);
+    glUniformMatrix4fv( uniforms[UNIFORM_MODELVIEW_MATRIX], 1, 0, _crateMatrix.m );
+    
+    glBindTexture( GL_TEXTURE_2D, crateTexture );
+    glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, _crateIndexBuffer );
+    glDrawElements( GL_TRIANGLES, crateNumIndices, GL_UNSIGNED_INT, 0 );
 }
 
 #pragma mark -  OpenGL ES 2 shader compilation

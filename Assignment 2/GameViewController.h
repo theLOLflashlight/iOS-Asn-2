@@ -11,4 +11,7 @@
 
 @interface GameViewController : GLKViewController
 
+@property (strong, nonatomic) IBOutlet UITapGestureRecognizer *singleTapRecg;
+@property (strong, nonatomic) IBOutlet UITapGestureRecognizer *doubleTapRecg;
+
 @end

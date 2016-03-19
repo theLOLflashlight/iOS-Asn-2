@@ -3,12 +3,12 @@
     <dependencies>
         <deployment identifier="iOS"/>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="9529"/>
+        <capability name="Constraints to layout margins" minToolsVersion="6.0"/>
     </dependencies>
     <scenes>
         <!--Game View Controller-->
         <scene sceneID="tXr-a1-R10">
             <objects>
-                <placeholder placeholderIdentifier="IBFirstResponder" id="SZV-WD-TEh" sceneMemberID="firstResponder"/>
                 <viewController id="BV1-FR-VrT" customClass="GameViewController" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="8aa-yV-Osq"/>
@@ -17,9 +17,90 @@
                     <view key="view" contentMode="scaleToFill" id="3se-qz-xqx" customClass="GLKView">
                         <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <switch opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" contentHorizontalAlignment="center" contentVerticalAlignment="center" translatesAutoresizingMaskIntoConstraints="NO" id="Dvn-JJ-d7O" userLabel="Day Switch">
+                                <rect key="frame" x="531" y="28" width="51" height="31"/>
+                                <connections>
+                                    <action selector="daytimeSwitch:" destination="BV1-FR-VrT" eventType="valueChanged" id="MeT-Vh-OPd"/>
+                                </connections>
+                            </switch>
+                            <switch opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" enabled="NO" contentHorizontalAlignment="center" contentVerticalAlignment="center" translatesAutoresizingMaskIntoConstraints="NO" id="lgB-hI-40L" userLabel="Flashlight Switch">
+                                <rect key="frame" x="531" y="67" width="51" height="31"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="31" id="ysz-oK-tDZ"/>
+                                </constraints>
+                                <connections>
+                                    <action selector="flashlightSwitch:" destination="BV1-FR-VrT" eventType="valueChanged" id="a0f-H3-fKM"/>
+                                </connections>
+                            </switch>
+                            <switch opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" enabled="NO" contentHorizontalAlignment="center" contentVerticalAlignment="center" translatesAutoresizingMaskIntoConstraints="NO" id="Bm5-UV-jUN" userLabel="Fog Switch">
+                                <rect key="frame" x="531" y="106" width="51" height="31"/>
+                                <connections>
+                                    <action selector="fogSwitch:" destination="BV1-FR-VrT" eventType="valueChanged" id="nUe-f0-WwE"/>
+                                </connections>
+                            </switch>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Daytime" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="tfV-ZL-AiP">
+                                <rect key="frame" x="460" y="33" width="63" height="21"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <color key="textColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="calibratedRGB"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Flashlight" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="rZS-kD-qdr">
+                                <rect key="frame" x="449" y="72" width="74" height="21"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <color key="textColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="calibratedRGB"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Fog" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="LaS-CE-dON">
+                                <rect key="frame" x="494" y="111" width="29" height="21"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <color key="textColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="calibratedRGB"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                        </subviews>
                         <color key="backgroundColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+                        <gestureRecognizers/>
+                        <constraints>
+                            <constraint firstAttribute="trailingMargin" secondItem="Bm5-UV-jUN" secondAttribute="trailing" id="55g-6m-T30"/>
+                            <constraint firstItem="LaS-CE-dON" firstAttribute="centerY" secondItem="Bm5-UV-jUN" secondAttribute="centerY" id="8mb-iT-jEW"/>
+                            <constraint firstAttribute="trailingMargin" secondItem="Dvn-JJ-d7O" secondAttribute="trailing" id="9uQ-uw-oZO"/>
+                            <constraint firstItem="lgB-hI-40L" firstAttribute="top" secondItem="Dvn-JJ-d7O" secondAttribute="bottom" constant="8" id="Hcw-6e-mI1"/>
+                            <constraint firstItem="Bm5-UV-jUN" firstAttribute="leading" secondItem="LaS-CE-dON" secondAttribute="trailing" constant="8" id="Mc6-3W-euX"/>
+                            <constraint firstItem="Dvn-JJ-d7O" firstAttribute="leading" secondItem="tfV-ZL-AiP" secondAttribute="trailing" constant="8" id="Mgu-G9-OPl"/>
+                            <constraint firstItem="Dvn-JJ-d7O" firstAttribute="top" secondItem="8aa-yV-Osq" secondAttribute="bottom" constant="8" id="ZDT-LZ-rDM"/>
+                            <constraint firstItem="rZS-kD-qdr" firstAttribute="centerY" secondItem="lgB-hI-40L" secondAttribute="centerY" id="ao4-k2-bdP"/>
+                            <constraint firstItem="lgB-hI-40L" firstAttribute="leading" secondItem="rZS-kD-qdr" secondAttribute="trailing" constant="8" id="hXm-Ul-38o"/>
+                            <constraint firstItem="Bm5-UV-jUN" firstAttribute="top" secondItem="lgB-hI-40L" secondAttribute="bottom" constant="8" id="nm7-FE-Ob2"/>
+                            <constraint firstItem="tfV-ZL-AiP" firstAttribute="centerY" secondItem="Dvn-JJ-d7O" secondAttribute="centerY" id="pU3-3u-Icq"/>
+                            <constraint firstAttribute="trailingMargin" secondItem="lgB-hI-40L" secondAttribute="trailing" id="u4g-Sj-VDX"/>
+                        </constraints>
+                        <connections>
+                            <outletCollection property="gestureRecognizers" destination="rFh-FK-SSD" appends="YES" id="tH5-wY-m3o"/>
+                            <outletCollection property="gestureRecognizers" destination="P4M-uM-a4X" appends="YES" id="zkR-Op-Tz8"/>
+                            <outletCollection property="gestureRecognizers" destination="kq9-7x-DNW" appends="YES" id="hJl-Yu-3SK"/>
+                        </connections>
                     </view>
+                    <connections>
+                        <outlet property="doubleTapRecg" destination="kq9-7x-DNW" id="RXK-4a-DDQ"/>
+                        <outlet property="singleTapRecg" destination="rFh-FK-SSD" id="Voc-fC-NXl"/>
+                    </connections>
                 </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="SZV-WD-TEh" sceneMemberID="firstResponder"/>
+                <tapGestureRecognizer cancelsTouchesInView="NO" delaysTouchesEnded="NO" id="rFh-FK-SSD" userLabel="Single Tap Gesture Recognizer">
+                    <connections>
+                        <action selector="doSingleTap:" destination="BV1-FR-VrT" id="xmf-SD-6Zi"/>
+                    </connections>
+                </tapGestureRecognizer>
+                <panGestureRecognizer minimumNumberOfTouches="1" id="P4M-uM-a4X">
+                    <connections>
+                        <action selector="handlePan:" destination="BV1-FR-VrT" id="ZHa-Zs-gz5"/>
+                    </connections>
+                </panGestureRecognizer>
+                <tapGestureRecognizer cancelsTouchesInView="NO" delaysTouchesEnded="NO" numberOfTapsRequired="2" id="kq9-7x-DNW" userLabel="Double Tap Gesture Recognizer">
+                    <connections>
+                        <action selector="doDoubleTap:" destination="BV1-FR-VrT" id="sLW-FS-SC0"/>
+                    </connections>
+                </tapGestureRecognizer>
             </objects>
         </scene>
     </scenes>
